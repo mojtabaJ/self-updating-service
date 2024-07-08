@@ -26,17 +26,18 @@ Each project is structured as follows:
 *   **Endpoints**: Provides version information and download links to client applications.
 *   **Default Port**: 8081
 
-### client-app
-
-*   **Purpose**: A sample client application that needs to stay updated.
-*   **Functionality**: Checks for updates from the update-server.
-*   **Default Port**: 8082
-
 ### update-runner
 
 *   **Purpose**: Monitors for updates and manages the client application lifecycle.
 *   **Functionality**: Checks for updates from the update-server, downloads new versions of client-app, replaces the old version, and restarts the client application.
+*   **Default Port**: 8082
+
+### client-app
+
+*   **Purpose**: A sample client application that needs to stay updated.
+*   **Functionality**: Checks for updates from the update-server.
 *   **Default Port**: 8083
+
 
 Build and Run Instructions
 --------------------------
