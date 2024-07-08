@@ -10,7 +10,7 @@
     </parent>
     <groupId>io.github.mojtabaj</groupId>
     <artifactId>self-updating-service-client</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.2.0</version>
     <name>Client App</name>
     <description>Client App | Self Updating Service </description>
     <url/>
