@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Service class responsible for managing the self-updating mechanism of the client application.
@@ -18,12 +20,12 @@ import java.nio.file.StandardCopyOption;
 public class UpdateRunnerService {
 
     // Configuration constants
-    private static final int CLIENT_APP_PORT = 8083;
     private static final String UPDATE_SERVER_URL = "http://127.0.0.1:8081/update";
     private static final String JAR_FILE_NAME = "client_app.jar";
     private static final String VERSION_FILE = "version.txt";
     private static final VersionInfo VERSION_INFO = new VersionInfo("0.0.0", JAR_FILE_NAME, "");
 
+    private Process appProcess = null;
     /**
      * Constructor that initializes the UpdateRunnerService.
      * It loads the version information from a file on startup and starts the initial client application.
@@ -148,7 +150,6 @@ public class UpdateRunnerService {
             try (InputStream in = new URL(downloadUrl).openStream()) {
                 Files.copy(in, Paths.get(updateInfo.getJar()), StandardCopyOption.REPLACE_EXISTING);
             }
-            stopClientAppOnPort(CLIENT_APP_PORT);
         } else {
             throw new IllegalArgumentException("Download URL is null or empty.");
         }
@@ -165,49 +166,19 @@ public class UpdateRunnerService {
         Path jarPath = Paths.get(version.getJar());
         // Check if the JAR file exists
         if (Files.exists(jarPath)) {
-            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", version.getJar());
-            processBuilder.start();// Start the client application process
+            synchronized (this) {
+                if (appProcess != null) {
+                    appProcess.destroy();
+                    appProcess = null;
+                }
+                ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", version.getJar());
+                appProcess = processBuilder.start();
+            }
         } else {
             throw new FileNotFoundException("JAR file not found: " + jarPath.toString());
         }
     }
 
-    /**
-     * Stops the client application running on the specified port.
-     *
-     * @param port The port number on which the client application is running.
-     */
-    private void stopClientAppOnPort(int port) {
-        try {
-            String os = System.getProperty("os.name").toLowerCase();
-            String command;
-            if (os.contains("win")) {
-                command = String.format("cmd.exe /c netstat -ano | findstr :%d", port);
-                Process process = Runtime.getRuntime().exec(command);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (line.contains("LISTENING")) {
-                        String[] tokens = line.trim().split("\\s+");
-                        String pid = tokens[tokens.length - 1];
-                        Runtime.getRuntime().exec("cmd.exe /c taskkill /PID " + pid + " /F");
-                    }
-                }
-            } else {
-                command = String.format("lsof -i :%d", port);
-                Process process = Runtime.getRuntime().exec(new String[]{"sh", "-c", command});
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line = reader.readLine();
-                if (line != null) {
-                    String[] tokens = line.split("\\s+");
-                    String pid = tokens[1];
-                    Runtime.getRuntime().exec(new String[]{"sh", "-c", "kill -9 " + pid});
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     //</editor-fold>
 
