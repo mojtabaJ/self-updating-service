@@ -32,7 +32,6 @@ public class UpdateRunnerService {
      */
     public UpdateRunnerService() {
         try {
-            loadVersionFromFile(); // Load version info from file on startup
             try {
                 startClientApp(VERSION_INFO); // Start the initial client-app.jar when UpdateRunner starts
             }catch (FileNotFoundException e){
@@ -60,25 +59,6 @@ public class UpdateRunnerService {
         }
     }
 
-    /**
-     * Loads the version information from a file into the VERSION_INFO object.
-     * If the version file does not exist, it creates one with default values.
-     *
-     * @throws IOException If an I/O error occurs.
-     */
-    private void loadVersionFromFile() throws IOException {
-        File file = new File(VERSION_FILE);
-        if (file.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                VERSION_INFO.setVersion(reader.readLine());
-                VERSION_INFO.setJar(reader.readLine());
-                VERSION_INFO.setUrl(reader.readLine());
-            }
-        } else {
-            // If file doesn't exist, create it with default values
-            saveVersionToFile(VERSION_INFO);
-        }
-    }
 
     /**
      * Saves the version information to a file.
